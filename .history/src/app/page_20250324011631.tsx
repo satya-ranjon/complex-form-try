@@ -43,7 +43,7 @@ type Step = (typeof steps)[number]["id"];
 const PersonalInfoStep = () => {
   const form = useGenericForm<MultiStepFormData>();
 
-  // console.log(form.watch());
+  console.log(form.watch());
 
   return (
     <div className="space-y-4">
@@ -232,68 +232,23 @@ const FormContent = () => {
   const isLastStep = currentStepIndex === steps.length - 1;
 
   const handleNext = async () => {
-    setIsLoading(true);
-    setError(null);
+    let fieldsToValidate: (keyof MultiStepFormData)[] = [];
 
-    try {
-      let fieldsToValidate: (keyof MultiStepFormData)[] = [];
-      let dataToSend: Partial<MultiStepFormData> = {};
+    switch (currentStep) {
+      case "personal":
+        fieldsToValidate = ["firstName", "lastName", "dateOfBirth", "gender"];
+        break;
+      case "contact":
+        fieldsToValidate = ["email", "phone", "address", "city", "country"];
+        break;
+      case "account":
+        fieldsToValidate = ["username", "password", "confirmPassword"];
+        break;
+    }
 
-      switch (currentStep) {
-        case "personal":
-          fieldsToValidate = ["firstName", "lastName", "dateOfBirth", "gender"];
-          dataToSend = {
-            firstName: form.getValues("firstName"),
-            lastName: form.getValues("lastName"),
-            dateOfBirth: form.getValues("dateOfBirth"),
-            gender: form.getValues("gender"),
-          };
-          break;
-        case "contact":
-          fieldsToValidate = ["email", "phone", "address", "city", "country"];
-          dataToSend = {
-            email: form.getValues("email"),
-            phone: form.getValues("phone"),
-            address: form.getValues("address"),
-            city: form.getValues("city"),
-            country: form.getValues("country"),
-          };
-          break;
-        case "account":
-          fieldsToValidate = ["username", "password", "confirmPassword"];
-          dataToSend = {
-            username: form.getValues("username"),
-            password: form.getValues("password"),
-            confirmPassword: form.getValues("confirmPassword"),
-          };
-          break;
-      }
-
-      const isValid = await form.trigger(fieldsToValidate);
-      if (!isValid) {
-        return;
-      }
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Sending data to server:", dataToSend);
-
-      // Here you would make your actual API call
-      // const response = await fetch('/api/validate-step', {
-      //   method: 'POST',
-      //   body: JSON.stringify(dataToSend)
-      // });
-
-      // if (!response.ok) {
-      //   throw new Error('Server validation failed');
-      // }
-
+    const isValid = await form.trigger(fieldsToValidate);
+    if (isValid) {
       setCurrentStep(steps[currentStepIndex + 1].id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to validate step");
-      console.error("Step validation error:", err);
-    } finally {
-      setIsLoading(false);
     }
   };
 

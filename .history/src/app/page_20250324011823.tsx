@@ -276,7 +276,6 @@ const FormContent = () => {
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Sending data to server:", dataToSend);
 
       // Here you would make your actual API call
       // const response = await fetch('/api/validate-step', {

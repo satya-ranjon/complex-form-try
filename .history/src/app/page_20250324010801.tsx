@@ -24,13 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 
 const steps = [
   { id: "personal", title: "Personal Info" },
@@ -42,8 +35,6 @@ type Step = (typeof steps)[number]["id"];
 
 const PersonalInfoStep = () => {
   const form = useGenericForm<MultiStepFormData>();
-
-  // console.log(form.watch());
 
   return (
     <div className="space-y-4">
@@ -62,68 +53,18 @@ const PersonalInfoStep = () => {
         />
       </div>
 
-      <FormField
+      <FormFieldWithBlur<MultiStepFormData>
         name="dateOfBirth"
-        render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel>Date of Birth</FormLabel>
-            <Popover>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full pl-3 text-left font-normal",
-                      !field.value && "text-muted-foreground"
-                    )}>
-                    {field.value ? (
-                      format(field.value, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={field.value}
-                  onSelect={field.onChange}
-                  disabled={(date) =>
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            <FormMessage />
-          </FormItem>
-        )}
+        label="Date of Birth"
+        type="date"
+        placeholder="Select your date of birth"
       />
 
-      <FormField
+      <FormFieldWithBlur<MultiStepFormData>
         name="gender"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Gender</FormLabel>
-            <FormControl>
-              <RadioGroup
-                onValueChange={field.onChange}
-                defaultValue={field.value}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="male" id="male" />
-                  <label htmlFor="male">Male</label>
-                  <RadioGroupItem value="female" id="female" />
-                  <label htmlFor="female">Female</label>
-                  <RadioGroupItem value="other" id="other" />
-                  <label htmlFor="other">Other</label>
-                </div>
-              </RadioGroup>
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        label="Gender"
+        type="radio"
+        placeholder="Select your gender"
       />
     </div>
   );
@@ -162,27 +103,11 @@ const ContactInfoStep = () => {
           type="text"
           placeholder="Enter your city"
         />
-        <FormField
+        <FormFieldWithBlur<MultiStepFormData>
           name="country"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Country</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a country" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="us">United States</SelectItem>
-                  <SelectItem value="uk">United Kingdom</SelectItem>
-                  <SelectItem value="ca">Canada</SelectItem>
-                  <SelectItem value="au">Australia</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Country"
+          type="text"
+          placeholder="Enter your country"
         />
       </div>
     </div>
@@ -232,68 +157,9 @@ const FormContent = () => {
   const isLastStep = currentStepIndex === steps.length - 1;
 
   const handleNext = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      let fieldsToValidate: (keyof MultiStepFormData)[] = [];
-      let dataToSend: Partial<MultiStepFormData> = {};
-
-      switch (currentStep) {
-        case "personal":
-          fieldsToValidate = ["firstName", "lastName", "dateOfBirth", "gender"];
-          dataToSend = {
-            firstName: form.getValues("firstName"),
-            lastName: form.getValues("lastName"),
-            dateOfBirth: form.getValues("dateOfBirth"),
-            gender: form.getValues("gender"),
-          };
-          break;
-        case "contact":
-          fieldsToValidate = ["email", "phone", "address", "city", "country"];
-          dataToSend = {
-            email: form.getValues("email"),
-            phone: form.getValues("phone"),
-            address: form.getValues("address"),
-            city: form.getValues("city"),
-            country: form.getValues("country"),
-          };
-          break;
-        case "account":
-          fieldsToValidate = ["username", "password", "confirmPassword"];
-          dataToSend = {
-            username: form.getValues("username"),
-            password: form.getValues("password"),
-            confirmPassword: form.getValues("confirmPassword"),
-          };
-          break;
-      }
-
-      const isValid = await form.trigger(fieldsToValidate);
-      if (!isValid) {
-        return;
-      }
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Sending data to server:", dataToSend);
-
-      // Here you would make your actual API call
-      // const response = await fetch('/api/validate-step', {
-      //   method: 'POST',
-      //   body: JSON.stringify(dataToSend)
-      // });
-
-      // if (!response.ok) {
-      //   throw new Error('Server validation failed');
-      // }
-
+    const isValid = await form.trigger();
+    if (isValid) {
       setCurrentStep(steps[currentStepIndex + 1].id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to validate step");
-      console.error("Step validation error:", err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
